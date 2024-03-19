@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Management;
 using WindowsInput;
+using Serilog;
 
 namespace DSZahirDesktop
 {
@@ -38,7 +39,6 @@ namespace DSZahirDesktop
 
             //Capture the current desktop screen and stored as Bitmap image
             Bitmap screenMatch = new Bitmap(resX, resY, PixelFormat.Format24bppRgb);
-
             using (Graphics g = Graphics.FromImage(screenMatch))
             {
                 g.CopyFromScreen(new Point(0, 0), Point.Empty, new Size(resX, resY), CopyPixelOperation.SourceCopy);
@@ -47,24 +47,19 @@ namespace DSZahirDesktop
             Thread.Sleep(1000);
 
             bool isFound = false;
-
-            //Rectangle rect = FindImageOnScreen(ImgToFind1, screenMatch, out isFound);
-            //if (rect != Rectangle.Empty)//Image Found
-
             Point cntrpoint = new Point(0,0);
             Rectangle Rect = EmguMatch(datapicturefolder + @"\imagepart.png", datapicturefolder + @"\background.png", out isFound);
             if (Rect != Rectangle.Empty)
             {
-                Console.WriteLine($"EMGU.CV Methode Image Search => {isFound.ToString()}");
                 cntrpoint = new Point(Rect.X + System.Convert.ToInt32(Rect.Width / (double)2), Rect.Y + System.Convert.ToInt32(Rect.Height / (double)2));
-                Console.WriteLine($"EMGO.CV Image center point is => {cntrpoint.X} , {cntrpoint.Y}");
-
                 picloc = cntrpoint;
+                //Log.Information($"EMGU.CV Methode Image Search => {isFound.ToString()}");
+                //Log.Information($"EMGO.CV Image center point is => {cntrpoint.X} , {cntrpoint.Y}");
                 isFound = true;
             }
             else
             {
-                Console.WriteLine("EMGU.CV Methode Image Search => Image partial match not found..");
+                //Log.Information("EMGU.CV Methode Image Search => Image partial match not found..");
                 picloc = cntrpoint;
             }
             abspicloc = abspoint(picloc, resX, resY);
@@ -135,7 +130,7 @@ namespace DSZahirDesktop
                 result.MinMax(out minValues, out maxValues, out minLocations, out maxLocations);
 
                 // You can try different values of the threshold. I guess somewhere between 0.75 and 0.95 would be good.
-                if (maxValues[0] > 0.99)
+                if (maxValues[0] > 0.95)
                 {
                     // This is a match. Return the position.
                     //return maxLocations[0];

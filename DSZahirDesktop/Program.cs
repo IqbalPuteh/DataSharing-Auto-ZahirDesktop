@@ -16,9 +16,9 @@ namespace DSZahirDesktop
         static string dbpath = ConfigurationManager.AppSettings["dbpath"];
         static string loginId = ConfigurationManager.AppSettings["loginId"];
         static string password = ConfigurationManager.AppSettings["password"];
-        static string dbaliasname = ConfigurationManager.AppSettings["dbaliasname"];
-        //static string xPosWelcome = ConfigurationManager.AppSettings["xPosWelcome"];
-        //static string yPosWelcome = ConfigurationManager.AppSettings["yPosWelcome"];
+        static string dbname = ConfigurationManager.AppSettings["dbname"];
+        static string runasadmin = ConfigurationManager.AppSettings["runasadmin"].ToUpper();
+        static string waitappload = ConfigurationManager.AppSettings["waitappload"];
         static string erpappnamepath = ConfigurationManager.AppSettings["erpappnamepath"];
         static string issandbox = ConfigurationManager.AppSettings["uploadtosandbox"].ToUpper();
         static string enableconsolelog = ConfigurationManager.AppSettings["enableconsolelog"].ToUpper();
@@ -37,8 +37,57 @@ namespace DSZahirDesktop
 
         private static extern bool BlockInput(bool fBlockIt);
 
+        private void samplefindimage()
+        {
+            //This is Sample function, do not use!
+            Bitmap ImgToFind = new Bitmap(datapicturefolder + @"\image1.png");
+            Point p, absp;
+            Boolean isFound = false;
+            isFound = MySearch.CompareImages(ImgToFind, datapicturefolder, out p, out absp);
+
+            if (isFound)
+            {
+                var x = new InputSimulator();
+                x.Mouse.MoveMouseTo(absp.X, absp.Y);
+                x.Mouse.LeftButtonDoubleClick();
+            }
+        }
+
+        private static bool findimage(string imagename, out Point pnt)
+        {
+            Point p, absp;
+            p = new Point(0, 0);
+            absp = new Point(0, 0);
+
+            try
+            {
+                Bitmap ImgToFind = new Bitmap(datapicturefolder + $@"\{imagename}.png");
+
+                if (MySearch.CompareImages(ImgToFind, datapicturefolder, out p, out absp))
+                {
+                    Log.Information($"Image {imagename}.png was found");
+                    pnt = absp;
+                    return true;
+                }
+                else
+                {
+                    Log.Information($"Image {imagename}.png =>> was not found");
+                    pnt = absp;
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Information($"{ex.Message} => Quitting, end findimage automation function !!");
+                pnt = absp;
+                return false;
+            }
+
+        }
+
         static void Main(string[] args)
         {
+            Int32 errStep = 0;
             MyDirectoryManipulator myFileUtil = new MyDirectoryManipulator();
             try
             {
@@ -103,41 +152,41 @@ namespace DSZahirDesktop
                 }
                 Log.Logger = config.CreateLogger();
 
-                Log.Information("Zahir Desktop ver.5 Automation - *** Started *** ");
+                Log.Information("Zahir Desktop Automation - *** Started *** ");
 
 
                 if (!OpenApp())
                 {
                     Console.Beep();
                     Task.Delay(500);
-                    Log.Information("application automation failed when running app (OpenApp) !!!");
+                    Log.Information("Application automation failed when running app (OpenApp) !!!");
                     return;
                 }
 
-                if (!OpenDB())
+                if (!OpenDB(out errStep))
                 {
                     Console.Beep();
                     Task.Delay(500);
-                    Log.Information("application automation failed when running app (OpenDB) !!!");
+                    Log.Information($"Application automation failed when running app (OpenDB) - {errStep} !!!");
                     return;
                 }
-                return;
-
-
-                //if (!OpenReport("sales"))
+                
+                if (!OpenReport("sales"))
                 {
                     Console.Beep();
                     Task.Delay(500);
                     Log.Information("application automation failed when running app (OpenReport -> Sales) !!!");
                     return;
                 }
-                //if (!ClosingWorkspace())
+                if (!ClosingReport())
                 {
                     Console.Beep();
                     Task.Delay(500);
                     Log.Information("application automation failed when running app (ClosingWorkspace) !!!");
                     return;
                 }
+
+                return;
                 //if (!OpenReport("ar"))
                 {
                     Console.Beep();
@@ -197,71 +246,25 @@ namespace DSZahirDesktop
             }
         }
 
-        private void samplefindimage()
-        {
-            //This is Sample function, do not use!
-            Bitmap ImgToFind = new Bitmap(datapicturefolder + @"\image1.png");
-            Point p, absp;
-            Boolean isFound = false;
-            isFound = MySearch.CompareImages(ImgToFind, datapicturefolder, out p, out absp);
-
-            if (isFound)
-            {
-                var x = new InputSimulator();
-                x.Mouse.MoveMouseTo(absp.X, absp.Y);
-                x.Mouse.LeftButtonDoubleClick();
-            }
-        }
-
-        private static bool findimage(string imagename, out Point pnt)
-        {
-            Point p, absp;
-            p = new Point(0, 0);
-            absp = new Point(0, 0);
-
-            try
-            {
-                Bitmap ImgToFind = new Bitmap(datapicturefolder + $@"\{imagename}.png");
-
-                if (MySearch.CompareImages(ImgToFind, datapicturefolder, out p, out absp))
-                {
-                    Log.Information($"Image {imagename} was found");
-                    pnt = absp;
-                    return true;
-                }
-                else
-                {
-                    Log.Information($"Image {imagename} =>> was not found");
-                    pnt = absp;
-                    return false;
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Information($"{ex.Message} => Quitting, end findimage automation function !!");
-                pnt = absp;
-                return false;
-            }
-
-        }
-
         static bool OpenApp()
         {
-            var step = 0;
             try
             {
-                //appx = Application.Launch(@$"{appExe}");
-                //DesktopWindow = appx.GetMainWindow(automationUIA3);
-                //pid = appx.ProcessId;
+                Log.Information("Wait app loading for 45 sec.");
+                if (runasadmin == "Y")
+                {
+                    ProcessStartInfo psi = new ProcessStartInfo();
+                    psi.FileName = Environment.GetEnvironmentVariable("WINDIR") + "\\explorer.exe";
+                    //psi.Verb = "runasuser";
+                    //psi.LoadUserProfile = true;
+                    psi.Arguments = @$"{erpappnamepath}";
+                    Process p = Process.Start(psi);
+                } else
+                {
+                    Process.Start(erpappnamepath);
 
-                ProcessStartInfo psi = new ProcessStartInfo();
-                psi.FileName = Environment.GetEnvironmentVariable("WINDIR") + "\\explorer.exe";
-                psi.Verb = "runasuser";
-                psi.LoadUserProfile = true;
-                psi.Arguments = @$"{erpappnamepath}";
-                Process p = Process.Start(psi);
-                Log.Information("Wait 15 sec.");
-                Thread.Sleep(20000);
+                }
+                Thread.Sleep(Convert.ToInt32(waitappload));
                 Log.Information("Done waiting app to opened.");
 
                 return true;
@@ -273,50 +276,84 @@ namespace DSZahirDesktop
             }
         }
 
-        static bool OpenDB()
+        static bool OpenDB(out int errStep)
         {
-            var step = 0;
+            Int16 step = 0;
             var x = new InputSimulator();
             Point pnt =new Point(0,0);
             bool isFound = false;
 
             try
             {
-                isFound = findimage("01.opendata", out pnt);
+                isFound = findimage("01a.opendata", out pnt);
                 if (isFound)
                 {
                     x.Mouse.MoveMouseTo(pnt.X, pnt.Y);
-                    x.Mouse.LeftButtonDoubleClick();
+                    x.Mouse.LeftButtonClick();
                 } else
                 {
+                    step += 1;
+                    errStep = step;
                     return false;
                 }
-                Thread.Sleep(1000);
+                /* Wait zahir database opening screen to close */
+                Thread.Sleep(15000);
 
-                isFound = findimage("02.localdatabase", out pnt);
+                isFound = findimage("02a.reportmenu", out pnt);
                 if (isFound)
                 {
                     x.Mouse.MoveMouseTo(pnt.X, pnt.Y);
-                    x.Mouse.LeftButtonDoubleClick();
+                    x.Mouse.LeftButtonClick();
                 }
                 else
                 {
-                    return false;
+                    step += 1;
+                    errStep = step;
                 }
-                Thread.Sleep(1000);
+                Thread.Sleep(2000);
+
+
+                errStep = 0;
+                return true;
 
                 isFound = findimage("03.databasename", out pnt);
                 if (isFound)
                 {
                     x.Mouse.MoveMouseTo(pnt.X, pnt.Y);
-                    x.Mouse.LeftButtonDoubleClick();
+                    x.Mouse.LeftButtonClick();
+                    x.Keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.CONTROL);
+                    x.Keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.VK_A);
+                    x.Keyboard.KeyUp(WindowsInput.Native.VirtualKeyCode.CONTROL);
+                    Thread.Sleep(1000);
+                    x.Keyboard.TextEntry($"{dbpath}{dbname}");
                 }
                 else
                 {
-                    return false;
+                    step += 1;
+                    errStep = step;
                 }
 
-                isFound = findimage("04.selectokdatabase", out pnt);
+                errStep = 0;
+                return true;
+            }
+            catch
+            {
+                Log.Information("Quitting, end of open DB automation function !!");
+                errStep = 0;
+                return false;
+            }
+        }
+
+        static bool OpenReport(string reportname)
+        {
+            Int16 step = 0, errStep = 0;
+            var x = new InputSimulator();
+            Point pnt = new Point(0, 0);
+            bool isFound = false;
+
+            try
+            {
+                isFound = findimage("03a.salesandarreport", out pnt);
                 if (isFound)
                 {
                     x.Mouse.MoveMouseTo(pnt.X, pnt.Y);
@@ -324,19 +361,86 @@ namespace DSZahirDesktop
                 }
                 else
                 {
-                    return false;
+                    step += 1;
+                    errStep = step;
                 }
-                Thread.Sleep(1000);
+                Thread.Sleep(2000);
 
+                isFound = findimage("04a.salesreport", out pnt);
+                if (isFound)
+                {
+                    x.Mouse.MoveMouseTo(pnt.X, pnt.Y);
+                    x.Mouse.LeftButtonDoubleClick();
+                }
+                else
+                {
+                    step += 1;
+                    errStep = step;
+                }
+                Thread.Sleep(2000);
+
+                /* Play with report date parameter here 
+                ------
+                ------
+                ------
+                 */
+
+
+                isFound = findimage("06a.selectokreport", out pnt);
+                if (isFound)
+                {
+                    x.Mouse.MoveMouseTo(pnt.X, pnt.Y);
+                    x.Mouse.LeftButtonClick();
+                }
+                else
+                {
+                    step += 1;
+                    errStep = step;
+                }
+                Thread.Sleep(10000);
+
+                errStep = 0;
                 return true;
             }
-            catch
+            catch (Exception)
             {
-                Log.Information("Quitting, end of open DB automation function !!");
+                Log.Information("Quitting, end of OpenReport automation function !!");
+                errStep = 0;
                 return false;
             }
         }
 
+        static bool ClosingReport()
+        {
+            Int16 step = 0, errStep = 0;
+            var x = new InputSimulator();
+            Point pnt = new Point(0, 0);
+            bool isFound = false;
+
+            try
+            {
+                isFound = findimage("07a.closereport", out pnt);
+                if (isFound)
+                {
+                    x.Mouse.MoveMouseTo(pnt.X, pnt.Y);
+                    x.Mouse.LeftButtonClick();
+                }
+                else
+                {
+                    step += 1;
+                    errStep = step;
+                }
+                Thread.Sleep(5000);
+                errStep = 0;
+                return true;
+            }
+            catch (Exception)
+            {
+                Log.Information("Quitting, end of ClosingReport automation function !!");
+                errStep = 0;
+                return false;
+            }
+        }
     }
 }
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
