@@ -28,6 +28,12 @@ namespace DSZahirDesktop
         static string datapicturefolder = appfolder + @"\" + ConfigurationManager.AppSettings["datapicturefolder"];
         static string screenshotlogfolder = appfolder + @"\" + ConfigurationManager.AppSettings["screenshotlogfolder"];
         static clsSearch MySearch = null;
+        static InputSimulator iSim = new InputSimulator();
+        enum leftclick
+        {
+            sngl,
+            dbl
+        }
 
 
         static string logfilename = "";
@@ -83,6 +89,18 @@ namespace DSZahirDesktop
                 return false;
             }
 
+        }
+
+        private static void SimulateMouseClick(Point point, leftclick click)
+        {
+            iSim.Mouse.MoveMouseTo(point.X, point.Y);
+            if (click == leftclick.sngl)
+            {
+                iSim.Mouse.LeftButtonClick();
+            } else
+            {
+                iSim.Mouse.LeftButtonDoubleClick();
+            }
         }
 
         static void Main(string[] args)
@@ -167,22 +185,22 @@ namespace DSZahirDesktop
                 {
                     Console.Beep();
                     Task.Delay(500);
-                    Log.Information($"Application automation failed when running app (OpenDB) - {errStep} !!!");
+                    Log.Information($"Application automation failed when running app (OpenDB) on step: {errStep} !!!");
                     return;
                 }
                 
-                if (!OpenReport("sales"))
+                if (!OpenReport(out errStep, "sales"))
                 {
                     Console.Beep();
                     Task.Delay(500);
-                    Log.Information("application automation failed when running app (OpenReport -> Sales) !!!");
+                    Log.Information($"application automation failed when running app (OpenReport -> Sales) on step: {errStep} !!!");
                     return;
                 }
-                if (!ClosingReport())
+                if (!ClosingReport(out errStep))
                 {
                     Console.Beep();
                     Task.Delay(500);
-                    Log.Information("application automation failed when running app (ClosingWorkspace) !!!");
+                    Log.Information($"application automation failed when running app (ClosingWorkspace) on step: {errStep} !!!");
                     return;
                 }
 
@@ -191,7 +209,7 @@ namespace DSZahirDesktop
                 {
                     Console.Beep();
                     Task.Delay(500);
-                    Log.Information("application automation failed when running app (OpenReport -> Sales) !!!");
+                    Log.Information($"application automation failed when running app (OpenReport -> Sales) on step: {errStep}  !!!");
                     return;
                 }
                 //if (!ClosingWorkspace())
@@ -262,7 +280,6 @@ namespace DSZahirDesktop
                 } else
                 {
                     Process.Start(erpappnamepath);
-
                 }
                 Thread.Sleep(Convert.ToInt32(waitappload));
                 Log.Information("Done waiting app to opened.");
@@ -276,7 +293,7 @@ namespace DSZahirDesktop
             }
         }
 
-        static bool OpenDB(out int errStep)
+        static bool OpenDB01(out int errStep)
         {
             Int16 step = 0;
             var x = new InputSimulator();
@@ -299,40 +316,6 @@ namespace DSZahirDesktop
                 /* Wait zahir database opening screen to close */
                 Thread.Sleep(15000);
 
-                isFound = findimage("02a.reportmenu", out pnt);
-                if (isFound)
-                {
-                    x.Mouse.MoveMouseTo(pnt.X, pnt.Y);
-                    x.Mouse.LeftButtonClick();
-                }
-                else
-                {
-                    step += 1;
-                    errStep = step;
-                }
-                Thread.Sleep(2000);
-
-
-                errStep = 0;
-                return true;
-
-                isFound = findimage("03.databasename", out pnt);
-                if (isFound)
-                {
-                    x.Mouse.MoveMouseTo(pnt.X, pnt.Y);
-                    x.Mouse.LeftButtonClick();
-                    x.Keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.CONTROL);
-                    x.Keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.VK_A);
-                    x.Keyboard.KeyUp(WindowsInput.Native.VirtualKeyCode.CONTROL);
-                    Thread.Sleep(1000);
-                    x.Keyboard.TextEntry($"{dbpath}{dbname}");
-                }
-                else
-                {
-                    step += 1;
-                    errStep = step;
-                }
-
                 errStep = 0;
                 return true;
             }
@@ -344,62 +327,100 @@ namespace DSZahirDesktop
             }
         }
 
-        static bool OpenReport(string reportname)
+        static bool OpenReport(out int errStep, string reportname)
         {
-            Int16 step = 0, errStep = 0;
-            var x = new InputSimulator();
             Point pnt = new Point(0, 0);
             bool isFound = false;
+            errStep = 0;
 
             try
             {
-                isFound = findimage("03a.salesandarreport", out pnt);
+                isFound = findimage("02a.reportmenu", out pnt);
                 if (isFound)
                 {
-                    x.Mouse.MoveMouseTo(pnt.X, pnt.Y);
-                    x.Mouse.LeftButtonDoubleClick();
+                    SimulateMouseClick(pnt, leftclick.sngl);
                 }
                 else
                 {
-                    step += 1;
-                    errStep = step;
+                    errStep = +1;
+                }
+                Thread.Sleep(2000);
+
+                isFound = findimage("03a.salesandarreport", out pnt);
+                if (isFound)
+                {
+                    SimulateMouseClick(pnt, leftclick.dbl);
+                }
+                else
+                {
+                    errStep = +1;
                 }
                 Thread.Sleep(2000);
 
                 isFound = findimage("04a.salesreport", out pnt);
                 if (isFound)
                 {
-                    x.Mouse.MoveMouseTo(pnt.X, pnt.Y);
-                    x.Mouse.LeftButtonDoubleClick();
+                    SimulateMouseClick(pnt, leftclick.dbl);
                 }
                 else
                 {
-                    step += 1;
-                    errStep = step;
+                    errStep = +1;
                 }
                 Thread.Sleep(2000);
 
-                /* Play with report date parameter here 
-                ------
-                ------
-                ------
-                 */
+                // Play with report date parameter here 
+                {
+                    isFound = findimage("05a.salesdateparam", out pnt);
+                    if (isFound)
+                    {
+                        SimulateMouseClick(pnt, leftclick.sngl);
+                    }
+                    else
+                    {
+                        errStep = +1;
+                    }
+                    Thread.Sleep(1000);
 
+                    isFound = findimage("05b.cancelcalendar", out pnt);
+                    if (isFound)
+                    {
+                        SimulateMouseClick(pnt, leftclick.sngl);
+                        Thread.Sleep(1000);
+
+                        iSim.Keyboard.TextEntry(DateManipultor.GetFirstDate());
+                        Thread.Sleep(500);
+                        iSim.Keyboard.TextEntry(DateManipultor.GetPrevMonth());
+                        Thread.Sleep(500);
+                        iSim.Keyboard.TextEntry(DateManipultor.GetPrevYear());
+
+                        iSim.Keyboard.KeyUp(WindowsInput.Native.VirtualKeyCode.TAB);
+                        Thread.Sleep(1000);
+
+                        iSim.Keyboard.TextEntry(DateManipultor.GetLastDayOfPrevMonth());
+                        Thread.Sleep(500);
+                        iSim.Keyboard.TextEntry(DateManipultor.GetPrevMonth());
+                        Thread.Sleep(500);
+                        iSim.Keyboard.TextEntry(DateManipultor.GetPrevYear());
+                    }
+                    else
+                    {
+                        errStep = +1;
+                    }
+                    Thread.Sleep(2000);
+
+                }
 
                 isFound = findimage("06a.selectokreport", out pnt);
                 if (isFound)
                 {
-                    x.Mouse.MoveMouseTo(pnt.X, pnt.Y);
-                    x.Mouse.LeftButtonClick();
+                    SimulateMouseClick(pnt, leftclick.sngl);
                 }
                 else
                 {
-                    step += 1;
-                    errStep = step;
+                    errStep = +1;
                 }
                 Thread.Sleep(10000);
 
-                errStep = 0;
                 return true;
             }
             catch (Exception)
@@ -410,9 +431,9 @@ namespace DSZahirDesktop
             }
         }
 
-        static bool ClosingReport()
+        static bool ClosingReport(out int errStep)
         {
-            Int16 step = 0, errStep = 0;
+            errStep = 0;
             var x = new InputSimulator();
             Point pnt = new Point(0, 0);
             bool isFound = false;
@@ -422,13 +443,12 @@ namespace DSZahirDesktop
                 isFound = findimage("07a.closereport", out pnt);
                 if (isFound)
                 {
-                    x.Mouse.MoveMouseTo(pnt.X, pnt.Y);
-                    x.Mouse.LeftButtonClick();
+                    SimulateMouseClick(pnt, leftclick.sngl);
+
                 }
                 else
                 {
-                    step += 1;
-                    errStep = step;
+                    errStep = +1;
                 }
                 Thread.Sleep(5000);
                 errStep = 0;
@@ -441,6 +461,76 @@ namespace DSZahirDesktop
                 return false;
             }
         }
+        static bool OpenDB(out int errStep)
+        {
+            Point pnt = new Point(0, 0);
+            bool isFound = false;
+            errStep = 0;
+            try
+            {
+                isFound = findimage("01.opendata", out pnt);
+                if (isFound)
+                {
+                    SimulateMouseClick(pnt, leftclick.sngl);
+                }
+                else
+                {
+                    errStep = +1;
+                }
+                /* Wait zahir database opening screen to close */
+                //Thread.Sleep(15000);
+
+                isFound = findimage("02.localdatabase", out pnt);
+                if (isFound)
+                {
+                    SimulateMouseClick(pnt, leftclick.sngl);
+                }
+                else
+                {
+                    errStep += 1;
+                }
+                Thread.Sleep(2000);
+
+
+                isFound = findimage("03.databasename", out pnt);
+                if (isFound)
+                {
+                    SimulateMouseClick(pnt, leftclick.sngl);
+                    iSim.Mouse.LeftButtonClick();
+                    iSim.Keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.CONTROL);
+                    iSim.Keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.VK_A);
+                    iSim.Keyboard.KeyUp(WindowsInput.Native.VirtualKeyCode.CONTROL);
+                    Thread.Sleep(1000);
+                    iSim.Keyboard.TextEntry($"{dbpath}{dbname}");
+                }
+                else
+                {
+                    errStep += 1;
+                }
+
+                isFound = findimage("04.selectokdatabase", out pnt);
+                if (isFound)
+                {
+                    SimulateMouseClick(pnt, leftclick.sngl);
+                }
+                else
+                {
+                    errStep += 1;
+                }
+                Thread.Sleep(10000);
+
+                errStep = 0;
+                return true;
+            }
+            catch
+            {
+                Log.Information("Quitting, end of open DB automation function !!");
+                errStep = 0;
+                return false;
+            }
+        }
     }
+
+
 }
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       

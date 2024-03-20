@@ -130,7 +130,7 @@ namespace DSZahirDesktop
                 result.MinMax(out minValues, out maxValues, out minLocations, out maxLocations);
 
                 // You can try different values of the threshold. I guess somewhere between 0.75 and 0.95 would be good.
-                if (maxValues[0] > 0.95)
+                if (maxValues[0] > 0.96)
                 {
                     // This is a match. Return the position.
                     //return maxLocations[0];
