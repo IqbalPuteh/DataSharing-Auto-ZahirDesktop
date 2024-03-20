@@ -1,6 +1,6 @@
 ﻿namespace DSZahirDesktop
 {
-    public abstract class DirectoryManipulator
+    public abstract class UtilityClass
     {
         public enum FileExtension
         {
@@ -49,7 +49,7 @@
 
     }
 
-    public class MyDirectoryManipulator : DirectoryManipulator
+    public class MyDirectoryManipulator : UtilityClass
     {
 
 

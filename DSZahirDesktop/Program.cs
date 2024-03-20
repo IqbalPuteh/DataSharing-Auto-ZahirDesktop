@@ -29,7 +29,7 @@ namespace DSZahirDesktop
         static string screenshotlogfolder = appfolder + @"\" + ConfigurationManager.AppSettings["screenshotlogfolder"];
         static clsSearch MySearch = null;
         static InputSimulator iSim = new InputSimulator();
-        enum leftclick
+        enum leftClick
         {
             sngl,
             dbl
@@ -91,10 +91,10 @@ namespace DSZahirDesktop
 
         }
 
-        private static void SimulateMouseClick(Point point, leftclick click)
+        private static void SimulateMouseClick(Point point, leftClick click)
         {
             iSim.Mouse.MoveMouseTo(point.X, point.Y);
-            if (click == leftclick.sngl)
+            if (click == leftClick.sngl)
             {
                 iSim.Mouse.LeftButtonClick();
             } else
@@ -338,7 +338,7 @@ namespace DSZahirDesktop
                 isFound = findimage("02a.reportmenu", out pnt);
                 if (isFound)
                 {
-                    SimulateMouseClick(pnt, leftclick.sngl);
+                    SimulateMouseClick(pnt, leftClick.sngl);
                 }
                 else
                 {
@@ -349,7 +349,7 @@ namespace DSZahirDesktop
                 isFound = findimage("03a.salesandarreport", out pnt);
                 if (isFound)
                 {
-                    SimulateMouseClick(pnt, leftclick.dbl);
+                    SimulateMouseClick(pnt, leftClick.dbl);
                 }
                 else
                 {
@@ -360,7 +360,7 @@ namespace DSZahirDesktop
                 isFound = findimage("04a.salesreport", out pnt);
                 if (isFound)
                 {
-                    SimulateMouseClick(pnt, leftclick.dbl);
+                    SimulateMouseClick(pnt, leftClick.dbl);
                 }
                 else
                 {
@@ -373,7 +373,7 @@ namespace DSZahirDesktop
                     isFound = findimage("05a.salesdateparam", out pnt);
                     if (isFound)
                     {
-                        SimulateMouseClick(pnt, leftclick.sngl);
+                        SimulateMouseClick(pnt, leftClick.sngl);
                     }
                     else
                     {
@@ -384,7 +384,7 @@ namespace DSZahirDesktop
                     isFound = findimage("05b.cancelcalendar", out pnt);
                     if (isFound)
                     {
-                        SimulateMouseClick(pnt, leftclick.sngl);
+                        SimulateMouseClick(pnt, leftClick.sngl);
                         Thread.Sleep(1000);
 
                         iSim.Keyboard.TextEntry(DateManipultor.GetFirstDate());
@@ -413,7 +413,7 @@ namespace DSZahirDesktop
                 isFound = findimage("06a.selectokreport", out pnt);
                 if (isFound)
                 {
-                    SimulateMouseClick(pnt, leftclick.sngl);
+                    SimulateMouseClick(pnt, leftClick.sngl);
                 }
                 else
                 {
@@ -443,7 +443,7 @@ namespace DSZahirDesktop
                 isFound = findimage("07a.closereport", out pnt);
                 if (isFound)
                 {
-                    SimulateMouseClick(pnt, leftclick.sngl);
+                    SimulateMouseClick(pnt, leftClick.sngl);
 
                 }
                 else
@@ -471,7 +471,7 @@ namespace DSZahirDesktop
                 isFound = findimage("01.opendata", out pnt);
                 if (isFound)
                 {
-                    SimulateMouseClick(pnt, leftclick.sngl);
+                    SimulateMouseClick(pnt, leftClick.sngl);
                 }
                 else
                 {
@@ -483,7 +483,7 @@ namespace DSZahirDesktop
                 isFound = findimage("02.localdatabase", out pnt);
                 if (isFound)
                 {
-                    SimulateMouseClick(pnt, leftclick.sngl);
+                    SimulateMouseClick(pnt, leftClick.sngl);
                 }
                 else
                 {
@@ -495,7 +495,7 @@ namespace DSZahirDesktop
                 isFound = findimage("03.databasename", out pnt);
                 if (isFound)
                 {
-                    SimulateMouseClick(pnt, leftclick.sngl);
+                    SimulateMouseClick(pnt, leftClick.sngl);
                     iSim.Mouse.LeftButtonClick();
                     iSim.Keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.CONTROL);
                     iSim.Keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.VK_A);
@@ -511,7 +511,7 @@ namespace DSZahirDesktop
                 isFound = findimage("04.selectokdatabase", out pnt);
                 if (isFound)
                 {
-                    SimulateMouseClick(pnt, leftclick.sngl);
+                    SimulateMouseClick(pnt, leftClick.sngl);
                 }
                 else
                 {
