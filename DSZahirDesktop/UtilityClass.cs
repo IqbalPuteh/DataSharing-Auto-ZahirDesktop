@@ -6,7 +6,8 @@
         {
             Excel,
             Log,
-            Zip
+            Zip,
+            Csv
         }
 
         public virtual string CreateDirectory(string path)
@@ -74,6 +75,9 @@
                     break;
                 case FileExtension.Zip:
                     extension = "*.zip";
+                    break;
+                case FileExtension.Csv:
+                    extension = "*.csv";
                     break;
             }
             base.DeleteFilesBase(path, extension);

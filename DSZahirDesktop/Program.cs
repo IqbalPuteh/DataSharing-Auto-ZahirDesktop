@@ -5,6 +5,7 @@ using System.Drawing;
 using WindowsInput;
 using System.Management;
 using System.Diagnostics;
+using System.Linq.Expressions;
 
 
 namespace DSZahirDesktop
@@ -105,7 +106,7 @@ namespace DSZahirDesktop
 
                 //* Call this method to disable keyboard input
                 int maxWidth = Console.LargestWindowWidth;
-                Console.Title = "Accurate Desktop Version 5 - Automasi - By PT FAIRBANC TECHNOLOGIEST INDONESIA";
+                Console.Title = "Zahir Desktop Version 13 - Automasi - By PT FAIRBANC TECHNOLOGIEST INDONESIA";
                 Console.WindowLeft = 0;
                 Console.WindowTop = 0;
                 Console.SetWindowPosition(0, 0);
@@ -119,7 +120,7 @@ namespace DSZahirDesktop
                 Console.WriteLine($"     Komputer akan menjalankan oleh applikasi robot automasi...   ");
                 Console.WriteLine($" Aktifitas penggunakan komputer akan ter-BLOKIR sekitar 10 menit. ");
                 Console.WriteLine($"******************************************************************");
-                Console.WriteLine($"     Resolusi layar adalah lebar: {resX.ToString("00000")}, dan tinggi: {resY.ToString("00000")}        ");
+                Console.WriteLine($"      Resolusi layar adalah lebar: {resX.ToString("0000")}, dan tinggi: {resY.ToString("0000")}         ");
 
 #if DEBUG
                 BlockInput(false);
@@ -136,6 +137,11 @@ namespace DSZahirDesktop
                 }
                 Console.ForegroundColor = ConsoleColor.DarkGreen;
                 Console.BackgroundColor = ConsoleColor.Black;
+                var temp0 = myFileUtil.DeleteFiles(appfolder, MyDirectoryManipulator.FileExtension.Csv);
+                Task.Run(() => Console.WriteLine($"[{DateTime.Now.ToString("HH:mm:ss")} INF] {temp0}"));
+                do
+                {
+                } while (!Task.CompletedTask.IsCompleted);
                 var temp1 = myFileUtil.DeleteFiles(appfolder, MyDirectoryManipulator.FileExtension.Excel);
                 Task.Run(() => Console.WriteLine($"[{DateTime.Now.ToString("HH:mm:ss")} INF] {temp1}"));
                 do
@@ -203,26 +209,28 @@ namespace DSZahirDesktop
                     Log.Information($"application automation failed when running app (ClosingReport) on step: {errStep}  !!!");
                     return;
                 }
-                return;
-                //if (!OpenReport("outlet"))
+                if (!OpenReport(out errStep, "outlet"))
                 {
                     Console.Beep();
                     Task.Delay(500);
-                    Log.Information("application automation failed when running app (OpenReport -> Outlet) !!!");
+                    Log.Information("application automation failed when running app (OpenReport -> Outlet) on step: {errStep} !!!");
                     return;
                 }
-                //if (!ClosingWorkspace())
+
+                if (!ClosingReport(out errStep))
                 {
                     Console.Beep();
                     Task.Delay(500);
-                    Log.Information("application automation failed when running app (ClosingWorkspace) !!!");
+                    Log.Information("application automation failed when running app (ClosingWorkspace) on step: {errStep} !!!");
                     return;
                 }
-                //if (!CloseApp())
+
+
+                if (!CloseApp(out errStep))
                 {
                     Console.Beep();
                     Task.Delay(500);
-                    Log.Information("application automation failed when running app (CloseApp) !!!");
+                    Log.Information("application automation failed when running app (CloseApp) on step: {errStep} !!!");
                     return;
                 }
 
@@ -295,8 +303,7 @@ namespace DSZahirDesktop
                 {
                     return false;
                 }
-                /* Wait zahir database opening screen to close */
-                //Thread.Sleep(15000);
+                Thread.Sleep(2000);
 
                 isFound = findimage("02.localdatabase", out pnt);
                 errStep += 1;
@@ -338,47 +345,13 @@ namespace DSZahirDesktop
                 {
                     return false;
                 }
-                Thread.Sleep(10000);
+                Thread.Sleep(12500);
 
                 return true;
             }
             catch
             {
                 Log.Information("Quitting, end of open DB automation function !!");
-                return false;
-            }
-        }
-
-        static bool OpenDB01(out int errStep)
-        {
-            Int16 step = 0;
-            var x = new InputSimulator();
-            Point pnt =new Point(0,0);
-            bool isFound = false;
-
-            try
-            {
-                isFound = findimage("01a.opendata", out pnt);
-                if (isFound)
-                {
-                    x.Mouse.MoveMouseTo(pnt.X, pnt.Y);
-                    x.Mouse.LeftButtonClick();
-                } else
-                {
-                    step += 1;
-                    errStep = step;
-                    return false;
-                }
-                /* Wait zahir database opening screen to close */
-                Thread.Sleep(15000);
-
-                errStep = 0;
-                return true;
-            }
-            catch
-            {
-                Log.Information("Quitting, end of open DB automation function !!");
-                errStep = 0;
                 return false;
             }
         }
@@ -391,20 +364,21 @@ namespace DSZahirDesktop
 
             try
             {
+                isFound = findimage("02a.reportmenu", out pnt);
+                    errStep = +1;
+                if (isFound)
+                {
+                    SimulateMouseClick(pnt, leftClick.sngl);
+                }
+                else
+                {
+                    return false;
+                }
+                Thread.Sleep(2000);
+
                 if (reportname == "sales")
                 {
-                    isFound = findimage("02a.reportmenu", out pnt);
-                    errStep = +1;
-                    if (isFound)
-                    {
-                        SimulateMouseClick(pnt, leftClick.sngl);
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                    Thread.Sleep(2000);
-
+                    /* Sales report interaction start */
                     isFound = findimage("03a.salesandarreport", out pnt);
                     errStep = +1;
                     if (isFound)
@@ -416,7 +390,7 @@ namespace DSZahirDesktop
                         return false;
                     }
                     Thread.Sleep(2000);
-                    
+
                     isFound = findimage("04a.salesreport", out pnt);
                     errStep = +1;
                     if (isFound)
@@ -472,22 +446,21 @@ namespace DSZahirDesktop
                         }
                         Thread.Sleep(2000);
                     }
-
                     isFound = findimage("07a.selectokreport", out pnt);
+                    errStep = +1;
                     if (isFound)
                     {
                         SimulateMouseClick(pnt, leftClick.sngl);
                     }
                     else
                     {
-                        errStep = +1;
                         return false;
                     }
-                    Thread.Sleep(10000);
                 }
+
                 else if (reportname == "ar")
                 {
-                    isFound = findimage("09a.arreport", out pnt);
+                    isFound = findimage("11a.arreport", out pnt);
                     errStep = +1;
 
                     if (isFound)
@@ -500,7 +473,7 @@ namespace DSZahirDesktop
                     }
                     Thread.Sleep(2000);
 
-                    isFound = findimage("10a.customerpayment", out pnt);
+                    isFound = findimage("12a.customerpayment", out pnt);
                     errStep = +1;
 
                     if (isFound)
@@ -564,8 +537,105 @@ namespace DSZahirDesktop
                     {
                         return false;
                     }
-                    Thread.Sleep(10000);
+
                 }
+
+                else if (reportname == "outlet")
+                {
+                    /* Sales report interaction start */
+                    isFound = findimage("03b.otherreport", out pnt);
+                    errStep = +1;
+                    if (isFound)
+                    {
+                        SimulateMouseClick(pnt, leftClick.dbl);
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                    Thread.Sleep(2000);
+
+                    isFound = findimage("04b.customerreport", out pnt);
+                    errStep = +1;
+                    if (isFound)
+                    {
+                        SimulateMouseClick(pnt, leftClick.dbl);
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                    Thread.Sleep(2000);
+
+                    isFound = findimage("07a.selectokreport", out pnt);
+                    errStep = +1;
+                    if (isFound)
+                    {
+                        SimulateMouseClick(pnt, leftClick.sngl);
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                Thread.Sleep(10000);
+
+                isFound = findimage("08a.exporticon", out pnt);
+                errStep = +1;
+                if (isFound)
+                {
+                    SimulateMouseClick(pnt, leftClick.sngl);
+                }
+                else
+                {
+                    return false;
+                }
+                isFound = findimage("09a.csvfile", out pnt);
+                errStep = +1;
+                if (isFound)
+                {
+                    SimulateMouseClick(pnt, leftClick.sngl);
+                }
+                else
+                {
+                    return false;
+                }
+                Thread.Sleep(2000);
+                /* press Enter */
+                iSim.Keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.SPACE);
+                Thread.Sleep(1000);
+                iSim.Keyboard.ModifiedKeyStroke(WindowsInput.Native.VirtualKeyCode.CONTROL, WindowsInput.Native.VirtualKeyCode.VK_A);
+                Thread.Sleep(1000);
+                iSim.Keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.BACK);
+                Thread.Sleep(1000);
+
+                switch (reportname)
+                {
+                    case "sales":
+                        iSim.Keyboard.TextEntry($@"{appfolder}\Sales.csv");
+                        break;
+                    case "ar":
+                        iSim.Keyboard.TextEntry($@"{appfolder}\AR.csv");
+                        break;
+                    case "outlet":
+                        iSim.Keyboard.TextEntry($@"{appfolder}\Master_Outlet.csv");
+                        break;
+                    default:
+                        iSim.Keyboard.TextEntry($@"{appfolder}\Unknown_Report.csv");
+                        break;
+                }
+                Thread.Sleep(1000);
+
+                //if (reportname != "outlet")
+                {
+                    iSim.Keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.TAB);
+                    Thread.Sleep(1000);
+                }
+                iSim.Keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.TAB);
+                Thread.Sleep(1000);
+                /* Press 'Save' button by pressing Enter Key */
+                iSim.Keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.RETURN);
+                Thread.Sleep(1000);
                 return true;
             }
             catch (Exception)
@@ -585,7 +655,7 @@ namespace DSZahirDesktop
 
             try
             {
-                isFound = findimage("08a.closereport", out pnt);
+                isFound = findimage("15a.closereport", out pnt);
                 errStep = +1;
                 if (isFound)
                 {
@@ -606,37 +676,55 @@ namespace DSZahirDesktop
             }
         }
 
-        static bool AR(out int errStep)
+        static bool CloseApp(out int errStep)
         {
-            Int16 step = 0;
-            var x = new InputSimulator();
             Point pnt = new Point(0, 0);
+            errStep = 0;
             bool isFound = false;
-
             try
             {
-                isFound = findimage("01a.opendata", out pnt);
+                isFound = findimage("16a.settingicon", out pnt);
                 if (isFound)
                 {
-                    x.Mouse.MoveMouseTo(pnt.X, pnt.Y);
-                    x.Mouse.LeftButtonClick();
+                    SimulateMouseClick(pnt, leftClick.sngl);
                 }
                 else
                 {
-                    step += 1;
-                    errStep = step;
                     return false;
                 }
-                /* Wait zahir database opening screen to close */
-                Thread.Sleep(15000);
+                errStep += 1;
+                Thread.Sleep(2500);
 
-                errStep = 0;
+                isFound = findimage("17a.exitbutton", out pnt);
+                if (isFound)
+                {
+                    SimulateMouseClick(pnt, leftClick.sngl);
+                }
+                else
+                {
+                    return false;
+                }
+                errStep += 1;
+                Thread.Sleep(2500);
+
+                isFound = findimage("18a.exitwithoutbackup", out pnt);
+                if (isFound)
+                {
+                    SimulateMouseClick(pnt, leftClick.sngl);
+                }
+                else
+                {
+                    return false;
+                }
+                errStep += 1;
+
+                /* Wait zahir database screen to close */
+                Thread.Sleep(15000);
                 return true;
             }
             catch
             {
                 Log.Information("Quitting, end of AR automation function !!");
-                errStep = 0;
                 return false;
             }
         }
