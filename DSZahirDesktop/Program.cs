@@ -56,7 +56,7 @@ namespace DSZahirDesktop
 
                 if (MySearch.CompareImages(ImgToFind, datapicturefolder, out p, out absp))
                 {
-                    Log.Information($"Image {imagename}.png found");
+                    Log.Information($"Image {imagename}.png found.");
                     pnt = absp;
                     return true;
                 }
@@ -79,13 +79,18 @@ namespace DSZahirDesktop
         private static void SimulateMouseClick(Point point, leftClick click)
         {
             iSim.Mouse.MoveMouseTo(point.X, point.Y);
+            Int32 x = point.X / 100;
+            Int32 y = point.Y / 100;
             if (click == leftClick.sngl)
             {
                 iSim.Mouse.LeftButtonClick();
+                Log.Information($"Single click interaction with image in X={x}, Y={y} point.");
             } else
             {
                 iSim.Mouse.LeftButtonDoubleClick();
+                Log.Information($"Double click interaction with image in X={x}, Y={y} point.");
             }
+            
         }
 
         static void Main(string[] args)
@@ -213,7 +218,7 @@ namespace DSZahirDesktop
                 {
                     Console.Beep();
                     Task.Delay(500);
-                    Log.Information("application automation failed when running app (OpenReport -> Outlet) on step: {errStep} !!!");
+                    Log.Information($"application automation failed when running app (OpenReport -> Outlet) on step: {errStep} !!!");
                     return;
                 }
 
@@ -221,7 +226,7 @@ namespace DSZahirDesktop
                 {
                     Console.Beep();
                     Task.Delay(500);
-                    Log.Information("application automation failed when running app (ClosingWorkspace) on step: {errStep} !!!");
+                    Log.Information($"application automation failed when running app (ClosingWorkspace) on step: {errStep} !!!");
                     return;
                 }
 
@@ -279,9 +284,9 @@ namespace DSZahirDesktop
 
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
-                Log.Information("Quitting, end of OpenApp function !!");
+                Log.Information($"Quitting, end of OpenApp function -> {ex.Message} !!");
                 return false;
             }
         }
@@ -537,7 +542,6 @@ namespace DSZahirDesktop
                     {
                         return false;
                     }
-
                 }
 
                 else if (reportname == "outlet")
@@ -603,11 +607,11 @@ namespace DSZahirDesktop
                 Thread.Sleep(2000);
                 /* press Enter */
                 iSim.Keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.SPACE);
-                Thread.Sleep(1000);
+                Thread.Sleep(1500);
                 iSim.Keyboard.ModifiedKeyStroke(WindowsInput.Native.VirtualKeyCode.CONTROL, WindowsInput.Native.VirtualKeyCode.VK_A);
-                Thread.Sleep(1000);
+                Thread.Sleep(2000);
                 iSim.Keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.BACK);
-                Thread.Sleep(1000);
+                Thread.Sleep(2000);
 
                 switch (reportname)
                 {
@@ -624,18 +628,18 @@ namespace DSZahirDesktop
                         iSim.Keyboard.TextEntry($@"{appfolder}\Unknown_Report.csv");
                         break;
                 }
-                Thread.Sleep(1000);
+                Thread.Sleep(2000);
 
                 //if (reportname != "outlet")
                 {
                     iSim.Keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.TAB);
-                    Thread.Sleep(1000);
+                    Thread.Sleep(2000);
                 }
                 iSim.Keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.TAB);
-                Thread.Sleep(1000);
+                Thread.Sleep(2000);
                 /* Press 'Save' button by pressing Enter Key */
                 iSim.Keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.RETURN);
-                Thread.Sleep(1000);
+                Thread.Sleep(2000);
                 return true;
             }
             catch (Exception)
