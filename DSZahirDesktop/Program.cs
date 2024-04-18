@@ -5,7 +5,7 @@ using System.Drawing;
 using WindowsInput;
 using System.Management;
 using System.Diagnostics;
-using System.Linq.Expressions;
+using System.IO.Compression;
 
 
 namespace DSZahirDesktop
@@ -56,13 +56,13 @@ namespace DSZahirDesktop
 
                 if (MySearch.CompareImages(ImgToFind, datapicturefolder, out p, out absp))
                 {
-                    Log.Information($"Image {imagename}.png found.");
+                    Log.Information($"Search and found image name => {imagename}.png");
                     pnt = absp;
                     return true;
                 }
                 else
                 {
-                    Log.Information($">> Image {imagename}.png NOT found !!!");
+                    Log.Information($"Cannot find image named => {imagename}.png !!!");
                     pnt = absp;
                     return false;
                 }
@@ -84,11 +84,11 @@ namespace DSZahirDesktop
             if (click == leftClick.sngl)
             {
                 iSim.Mouse.LeftButtonClick();
-                Log.Information($"Single click interaction with image in X={x}, Y={y} point.");
+                Log.Information($"Single click interaction with above named image at X={x} & Y={y} point.");
             } else
             {
                 iSim.Mouse.LeftButtonDoubleClick();
-                Log.Information($"Double click interaction with image in X={x}, Y={y} point.");
+                Log.Information($"Double click interaction with above named image at X={x} & Y={y} point.");
             }
             
         }
@@ -239,8 +239,13 @@ namespace DSZahirDesktop
                     return;
                 }
 
-                //ZipandSend();
-
+                if (ZipandSend())
+                {
+                    Console.Beep();
+                    Task.Delay(500);
+                    Log.Information("application automation failed when running app (ZipandSend) !!!");
+                    return;
+                }
             }
             catch (Exception ex)
             {
@@ -266,7 +271,7 @@ namespace DSZahirDesktop
         {
             try
             {
-                Log.Information("Wait app loading for 45 sec.");
+                Log.Information($"Wait app loading for {Convert.ToInt32(waitappload)/1000} sec.");
                 if (runasadmin == "Y")
                 {
                     ProcessStartInfo psi = new ProcessStartInfo();
@@ -613,33 +618,59 @@ namespace DSZahirDesktop
                 iSim.Keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.BACK);
                 Thread.Sleep(2000);
 
+                var excelname = "";
                 switch (reportname)
                 {
                     case "sales":
-                        iSim.Keyboard.TextEntry($@"{appfolder}\Sales.csv");
+                        excelname = "Sales_Data";
                         break;
                     case "ar":
-                        iSim.Keyboard.TextEntry($@"{appfolder}\AR.csv");
+                        excelname = "Repayment_Data";
                         break;
                     case "outlet":
-                        iSim.Keyboard.TextEntry($@"{appfolder}\Master_Outlet.csv");
+                        excelname = "Master_Outlet";
                         break;
-                    default:
-                        iSim.Keyboard.TextEntry($@"{appfolder}\Unknown_Report.csv");
+                    case "stock":
+                        excelname = "Laporan_Stock";
+                        break;
+                    case "labarugi":
+                        excelname = "Laporan_LabaRugi";
+                        break;
+                    case "cashflow":
+                        excelname = "Laporan_ArusKas";
+                        break;
+                    case "neraca":
+                        excelname = "Laporan_NeracaSaldo";
                         break;
                 }
+                iSim.Keyboard.TextEntry($@"{appfolder}\{excelname}.csv");
                 Thread.Sleep(2000);
 
-                //if (reportname != "outlet")
-                {
-                    iSim.Keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.TAB);
-                    Thread.Sleep(2000);
-                }
+                iSim.Keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.TAB);
+                Thread.Sleep(2000);
                 iSim.Keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.TAB);
                 Thread.Sleep(2000);
                 /* Press 'Save' button by pressing Enter Key */
                 iSim.Keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.RETURN);
                 Thread.Sleep(2000);
+
+                //* Pause the app to wait file saving is finished *//
+                DateTime startTime = DateTime.Now;
+                Thread.Sleep(1000);
+                while (DateTime.Now - startTime < TimeSpan.FromMinutes(3))
+                {
+                    if (IsFileExists(appfolder, excelname + ".csv"))
+                    {
+                        Log.Information($"{excelname}.csv file saved successfully...");
+                        break;
+                    }
+                    Thread.Sleep(5000);
+                }
+                if (!IsFileExists(appfolder, excelname + ".csv"))
+                {
+                    Console.WriteLine("3 minutes timeout expired when saving file...");
+                    return false;
+                }
                 return true;
             }
             catch (Exception)
@@ -729,6 +760,74 @@ namespace DSZahirDesktop
             catch
             {
                 Log.Information("Quitting, end of AR automation function !!");
+                return false;
+            }
+        }
+
+        static bool IsFileExists(string path, string fileName)
+        {
+            string fullPath = Path.Combine(path, fileName);
+            return File.Exists(fullPath);
+        }
+
+        static bool ZipandSend()
+        {
+            try
+            {
+                Log.Information("Starting zipping file reports process...");
+                var strDsPeriod = DateManipultor.GetPrevYear() + DateManipultor.GetPrevMonth();
+
+                Log.Information("Moving standart excel reports file to uploaded folder...");
+                // move excels files to Datafolder
+                var path = appfolder + @"\Master_Outlet.csv";
+                var path2 = uploadfolder + @"\ds-" + dtID + "-" + dtName + "-" + strDsPeriod + "_OUTLET.csv";
+                File.Move(path, path2, true);
+                path = appfolder + @"\Sales_Data.csv";
+                path2 = uploadfolder + @"\ds-" + dtID + "-" + dtName + "-" + strDsPeriod + "_SALES.csv";
+                File.Move(path, path2, true);
+                path = appfolder + @"\Repayment_Data.csv";
+                path2 = uploadfolder + @"\ds-" + dtID + "-" + dtName + "-" + strDsPeriod + "_AR.csv";
+                File.Move(path, path2, true);
+
+                // set zipping name for files
+                Log.Information("Zipping Transaction file(s)");
+                var strZipFile = dtID + "-" + dtName + "_" + strDsPeriod + ".zip";
+                ZipFile.CreateFromDirectory(uploadfolder, sharingfolder + Path.DirectorySeparatorChar + strZipFile);
+
+                // Send the ZIP file to the API server 
+                Log.Information("Sending ZIP file to the API server...");
+                var strStatusCode = "0"; // variable for debugging cUrl test
+                using (cUrlClass myCurlCls = new cUrlClass('Y', issandbox.ToArray().First(), "", sharingfolder + Path.DirectorySeparatorChar + strZipFile))
+                {
+                    strStatusCode = myCurlCls.SendRequest();
+                    if (strStatusCode == "200")
+                    {
+                        Log.Information("DATA TRANSACTION SHARING - SELESAI");
+                    }
+                    else
+                    {
+                        Log.Information("Failed to send TRANSACTION file to API server... => " + strStatusCode);
+                    }
+                }
+
+                /* Ending logging before sending log file to API server */
+                Log.CloseAndFlush();
+                Task.Run(() => Console.WriteLine($"[{DateTime.Now.ToString("HH:mm:ss")} INF] Sending log file to the API server..."));
+                strStatusCode = "0"; // variable for debugging cUrl test
+                using (cUrlClass myCurlCls = new cUrlClass('Y', issandbox.ToArray().First(), "", appfolder + Path.DirectorySeparatorChar + logfilename))
+                {
+                    strStatusCode = myCurlCls.SendRequest();
+                    if (strStatusCode != "200")
+                    {
+                        throw new Exception($"[{DateTime.Now.ToString("HH:mm:ss")} INF] Failed to send LOG file to API server...");
+                    }
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Task.Run(() => Console.WriteLine($"[{DateTime.Now.ToString("HH:mm:ss")} INF] Error during ZIP and cUrl send => {ex.Message}"));
                 return false;
             }
         }

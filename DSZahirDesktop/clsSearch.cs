@@ -3,9 +3,6 @@ using Emgu.CV;
 using System.Drawing.Imaging;
 using System.Drawing;
 using System.Runtime.InteropServices;
-using System.Management;
-using WindowsInput;
-using Serilog;
 
 namespace DSZahirDesktop
 {
