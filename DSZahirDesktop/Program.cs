@@ -26,7 +26,7 @@ namespace DSZahirDesktop
         static string appfolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\Downloads\" + ConfigurationManager.AppSettings["appfolder"];
         static string uploadfolder = appfolder + @"\" + ConfigurationManager.AppSettings["uploadfolder"];
         static string sharingfolder = appfolder + @"\" + ConfigurationManager.AppSettings["sharingfolder"];
-        static string datapicturefolder = appfolder + @"\" + ConfigurationManager.AppSettings["datapicturefolder"];
+        static string datapicturefolder = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + @"\" + ConfigurationManager.AppSettings["datapicturefolder"];
         static string screenshotlogfolder = appfolder + @"\" + ConfigurationManager.AppSettings["screenshotlogfolder"];
         static clsSearch MySearch = null;
         static InputSimulator iSim = new InputSimulator();
@@ -69,7 +69,7 @@ namespace DSZahirDesktop
             }
             catch (Exception ex)
             {
-                Log.Information($"{ex.Message} => Quitting, end findimage automation function !!");
+                Log.Information($"{ex.Message}=> Quitting.. End of FindImage automation function !!!");
                 pnt = absp;
                 return false;
             }
@@ -180,7 +180,7 @@ namespace DSZahirDesktop
                 {
                     Console.Beep();
                     Task.Delay(500);
-                    Log.Information($"Application automation failed when running app (OpenDB) on step: {errStep} !!!");
+                    Log.Information($"Application automation failed when running app (OpenDB) on step: {errStep.ToString()} !!!");
                     return;
                 }
                 
@@ -203,7 +203,7 @@ namespace DSZahirDesktop
                 {
                     Console.Beep();
                     Task.Delay(500);
-                    Log.Information($"application automation failed when running app (OpenReport -> AR) on step: {errStep}  !!!");
+                    Log.Information($"application automation failed when running app (OpenReport -> AR) on step: {errStep.ToString()}  !!!");
                     return;
                 }
 
@@ -211,14 +211,14 @@ namespace DSZahirDesktop
                 {
                     Console.Beep();
                     Task.Delay(500);
-                    Log.Information($"application automation failed when running app (ClosingReport) on step: {errStep}  !!!");
+                    Log.Information($"application automation failed when running app (ClosingReport) on step: {errStep.ToString()}  !!!");
                     return;
                 }
                 if (!OpenReport(out errStep, "outlet"))
                 {
                     Console.Beep();
                     Task.Delay(500);
-                    Log.Information($"application automation failed when running app (OpenReport -> Outlet) on step: {errStep} !!!");
+                    Log.Information($"application automation failed when running app (OpenReport -> Outlet) on step: {errStep.ToString()} !!!");
                     return;
                 }
 
@@ -235,7 +235,7 @@ namespace DSZahirDesktop
                 {
                     Console.Beep();
                     Task.Delay(500);
-                    Log.Information("application automation failed when running app (CloseApp) on step: {errStep} !!!");
+                    Log.Information($"application automation failed when running app (CloseApp) on step: {errStep} !!!");
                     return;
                 }
 
@@ -291,7 +291,7 @@ namespace DSZahirDesktop
             }
             catch (Exception ex)
             {
-                Log.Information($"Quitting, end of OpenApp function -> {ex.Message} !!");
+                Log.Information($"Quitting.. End of OpenApp function -> {ex.Message} !!!");
                 return false;
             }
         }
@@ -300,11 +300,10 @@ namespace DSZahirDesktop
         {
             Point pnt = new Point(0, 0);
             bool isFound = false;
-            errStep = 0;
+            errStep = 1;
             try
             {
-                isFound = findimage("01.opendata", out pnt);
-                errStep = +1;
+                isFound = findimage("1-1.opendata", out pnt);
                 if (isFound)
                 {
                     SimulateMouseClick(pnt, leftClick.sngl);
@@ -313,10 +312,10 @@ namespace DSZahirDesktop
                 {
                     return false;
                 }
+                errStep += 1;
                 Thread.Sleep(2000);
 
-                isFound = findimage("02.localdatabase", out pnt);
-                errStep += 1;
+                isFound = findimage("1-2.localdatabase", out pnt);
                 if (isFound)
                 {
                     SimulateMouseClick(pnt, leftClick.sngl);
@@ -325,18 +324,27 @@ namespace DSZahirDesktop
                 {
                     return false;
                 }
+                errStep += 1;
                 Thread.Sleep(2000);
 
 
-                isFound = findimage("03.databasename", out pnt);
-                errStep += 1;
+                isFound = findimage("1-3.databasename", out pnt);
                 if (isFound)
                 {
                     SimulateMouseClick(pnt, leftClick.sngl);
+                    errStep +=1;
+                    Thread.Sleep(1000);
                     iSim.Mouse.LeftButtonClick();
+                    errStep +=1;
+                    Thread.Sleep(1000);
                     iSim.Keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.CONTROL);
+                    errStep +=1;
+                    Thread.Sleep(500);
                     iSim.Keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.VK_A);
+                    errStep +=1;
+                    Thread.Sleep(500);
                     iSim.Keyboard.KeyUp(WindowsInput.Native.VirtualKeyCode.CONTROL);
+                    errStep +=1;
                     Thread.Sleep(1000);
                     iSim.Keyboard.TextEntry($"{dbpath}{dbname}");
                 }
@@ -345,8 +353,7 @@ namespace DSZahirDesktop
                     return false;
                 }
 
-                isFound = findimage("04.selectokdatabase", out pnt);
-                errStep += 1;
+                isFound = findimage("1-4.selectokdatabase", out pnt);
                 if (isFound)
                 {
                     SimulateMouseClick(pnt, leftClick.sngl);
@@ -361,7 +368,7 @@ namespace DSZahirDesktop
             }
             catch
             {
-                Log.Information("Quitting, end of open DB automation function !!");
+                Log.Information("Quitting.. End of open DB automation function !!");
                 return false;
             }
         }
@@ -370,12 +377,11 @@ namespace DSZahirDesktop
         {
             Point pnt = new Point(0, 0);
             bool isFound = false;
-            errStep = 0;
+            errStep = 1;
 
             try
             {
-                isFound = findimage("02a.reportmenu", out pnt);
-                    errStep = +1;
+                isFound = findimage("2-1.reportmenu", out pnt);
                 if (isFound)
                 {
                     SimulateMouseClick(pnt, leftClick.sngl);
@@ -385,12 +391,12 @@ namespace DSZahirDesktop
                     return false;
                 }
                 Thread.Sleep(2000);
+                errStep +=1;
 
                 if (reportname == "sales")
                 {
                     /* Sales report interaction start */
-                    isFound = findimage("03a.salesandarreport", out pnt);
-                    errStep = +1;
+                    isFound = findimage("2-2.salesandarreport", out pnt);
                     if (isFound)
                     {
                         SimulateMouseClick(pnt, leftClick.dbl);
@@ -400,9 +406,9 @@ namespace DSZahirDesktop
                         return false;
                     }
                     Thread.Sleep(2000);
+                    errStep +=1;
 
-                    isFound = findimage("04a.salesreport", out pnt);
-                    errStep = +1;
+                    isFound = findimage("Sales-1.salesreport", out pnt);
                     if (isFound)
                     {
                         SimulateMouseClick(pnt, leftClick.dbl);
@@ -412,11 +418,11 @@ namespace DSZahirDesktop
                         return false;
                     }
                     Thread.Sleep(2000);
+                    errStep +=1;
 
                     // Play with report date parameter here 
                     {
-                        isFound = findimage("05a.salesdateparam", out pnt);
-                        errStep = +1;
+                        isFound = findimage("Sales-2.dateparam", out pnt);
                         if (isFound)
                         {
                             SimulateMouseClick(pnt, leftClick.sngl);
@@ -426,28 +432,35 @@ namespace DSZahirDesktop
                             return false;
                         }
                         Thread.Sleep(1000);
+                        errStep +=1;
 
-                        isFound = findimage("06a.cancelcalendar", out pnt);
-                        errStep = +1;
+                        isFound = findimage("Sales-3.cancelcalendar", out pnt);
 
                         if (isFound)
                         {
                             SimulateMouseClick(pnt, leftClick.sngl);
                             Thread.Sleep(1000);
 
+                            errStep +=1;
                             iSim.Keyboard.TextEntry(DateManipultor.GetFirstDate());
                             Thread.Sleep(500);
+                            errStep +=1;
                             iSim.Keyboard.TextEntry(DateManipultor.GetPrevMonth());
+                            errStep +=1;
                             Thread.Sleep(500);
                             iSim.Keyboard.TextEntry(DateManipultor.GetPrevYear());
 
+                            errStep +=1; 
                             iSim.Keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.TAB);
                             Thread.Sleep(1000);
 
+                            errStep +=1; 
                             iSim.Keyboard.TextEntry(DateManipultor.GetLastDayOfPrevMonth());
                             Thread.Sleep(500);
+                            errStep +=1;
                             iSim.Keyboard.TextEntry(DateManipultor.GetPrevMonth());
                             Thread.Sleep(500);
+                            errStep +=1;
                             iSim.Keyboard.TextEntry(DateManipultor.GetPrevYear());
                         }
                         else
@@ -456,8 +469,7 @@ namespace DSZahirDesktop
                         }
                         Thread.Sleep(2000);
                     }
-                    isFound = findimage("07a.selectokreport", out pnt);
-                    errStep = +1;
+                    isFound = findimage("Sales-4.selectokreport", out pnt);
                     if (isFound)
                     {
                         SimulateMouseClick(pnt, leftClick.sngl);
@@ -466,12 +478,13 @@ namespace DSZahirDesktop
                     {
                         return false;
                     }
+                    errStep +=1;
+                    Thread.Sleep(2000);
                 }
 
                 else if (reportname == "ar")
                 {
-                    isFound = findimage("11a.arreport", out pnt);
-                    errStep = +1;
+                    isFound = findimage("Ar-0.arreport", out pnt);
 
                     if (isFound)
                     {
@@ -481,10 +494,11 @@ namespace DSZahirDesktop
                     {
                         return false;
                     }
+                    errStep +=1;
                     Thread.Sleep(2000);
 
-                    isFound = findimage("12a.customerpayment", out pnt);
-                    errStep = +1;
+                    isFound = findimage("Ar-1.customerpayment", out pnt);
+                    errStep +=1;
 
                     if (isFound)
                     {
@@ -494,12 +508,13 @@ namespace DSZahirDesktop
                     {
                         return false;
                     }
+                    errStep +=1;
                     Thread.Sleep(2000);
 
                     // Play with report date parameter here 
                     {
-                        isFound = findimage("05a.salesdateparam", out pnt);
-                        errStep = +1;
+                        isFound = findimage("Ar-2.dateparam", out pnt);
+                        errStep +=1;
                         if (isFound)
                         {
                             SimulateMouseClick(pnt, leftClick.sngl);
@@ -508,37 +523,50 @@ namespace DSZahirDesktop
                         {
                             return false;
                         }
+                        errStep +=1;
                         Thread.Sleep(1000);
-                        isFound = findimage("06a.cancelcalendar", out pnt);
-                        errStep = +1;
+                        isFound = findimage("Ar-3.cancelcalendar", out pnt);
                         if (isFound)
                         {
                             SimulateMouseClick(pnt, leftClick.sngl);
                             Thread.Sleep(1000);
+                            errStep +=1;
 
                             iSim.Keyboard.TextEntry(DateManipultor.GetFirstDate());
                             Thread.Sleep(500);
+                            errStep +=1;
+
                             iSim.Keyboard.TextEntry(DateManipultor.GetPrevMonth());
                             Thread.Sleep(500);
+                            errStep +=1;
+
                             iSim.Keyboard.TextEntry(DateManipultor.GetPrevYear());
+                            Thread.Sleep(500);
+                            errStep +=1;
 
                             iSim.Keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.TAB);
                             Thread.Sleep(1000);
+                            errStep +=1;
 
                             iSim.Keyboard.TextEntry(DateManipultor.GetLastDayOfPrevMonth());
-                            Thread.Sleep(500);
+                            Thread.Sleep(500); 
+                            errStep +=1;
+
                             iSim.Keyboard.TextEntry(DateManipultor.GetPrevMonth());
                             Thread.Sleep(500);
+                            errStep +=1;
+
                             iSim.Keyboard.TextEntry(DateManipultor.GetPrevYear());
+                            Thread.Sleep(500);
+                            errStep +=1;
                         }
                         else
                         {
                             return false;
                         }
-                        Thread.Sleep(2000);
+                        Thread.Sleep(1500);
                     }
-                    isFound = findimage("07a.selectokreport", out pnt);
-                    errStep = +1;
+                    isFound = findimage("Ar-4.selectokreport", out pnt);
                     if (isFound)
                     {
                         SimulateMouseClick(pnt, leftClick.sngl);
@@ -547,13 +575,28 @@ namespace DSZahirDesktop
                     {
                         return false;
                     }
+                    errStep +=1;
+                    Thread.Sleep(2000);
+
                 }
 
                 else if (reportname == "outlet")
                 {
                     /* Sales report interaction start */
-                    isFound = findimage("03b.otherreport", out pnt);
-                    errStep = +1;
+                    isFound = findimage("2-3.otherreport", out pnt);
+                    if (isFound)
+                    {
+                        SimulateMouseClick(pnt, leftClick.dbl);
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                    errStep +=1;
+                    Thread.Sleep(2000);
+
+                    isFound = findimage("Outlet-1.customerreport", out pnt);
+                    
                     if (isFound)
                     {
                         SimulateMouseClick(pnt, leftClick.dbl);
@@ -563,21 +606,9 @@ namespace DSZahirDesktop
                         return false;
                     }
                     Thread.Sleep(2000);
+                    errStep +=1;
 
-                    isFound = findimage("04b.customerreport", out pnt);
-                    errStep = +1;
-                    if (isFound)
-                    {
-                        SimulateMouseClick(pnt, leftClick.dbl);
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                    Thread.Sleep(2000);
-
-                    isFound = findimage("07a.selectokreport", out pnt);
-                    errStep = +1;
+                    isFound = findimage("Outlet-2.selectokreport", out pnt);
                     if (isFound)
                     {
                         SimulateMouseClick(pnt, leftClick.sngl);
@@ -586,11 +617,11 @@ namespace DSZahirDesktop
                     {
                         return false;
                     }
+                    errStep +=1;
                 }
                 Thread.Sleep(10000);
 
-                isFound = findimage("08a.exporticon", out pnt);
-                errStep = +1;
+                isFound = findimage("Export-1.exporticon", out pnt);
                 if (isFound)
                 {
                     SimulateMouseClick(pnt, leftClick.sngl);
@@ -599,8 +630,10 @@ namespace DSZahirDesktop
                 {
                     return false;
                 }
-                isFound = findimage("09a.csvfile", out pnt);
-                errStep = +1;
+                errStep +=1;
+                Thread.Sleep(2000);
+
+                isFound = findimage("Export-2.csvfile", out pnt);
                 if (isFound)
                 {
                     SimulateMouseClick(pnt, leftClick.sngl);
@@ -609,13 +642,17 @@ namespace DSZahirDesktop
                 {
                     return false;
                 }
+                errStep +=1;
                 Thread.Sleep(2000);
                 /* press Enter */
                 iSim.Keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.SPACE);
+                errStep +=1;
                 Thread.Sleep(1500);
                 iSim.Keyboard.ModifiedKeyStroke(WindowsInput.Native.VirtualKeyCode.CONTROL, WindowsInput.Native.VirtualKeyCode.VK_A);
+                errStep +=1; 
                 Thread.Sleep(2000);
                 iSim.Keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.BACK);
+                errStep +=1; 
                 Thread.Sleep(2000);
 
                 var excelname = "";
@@ -644,14 +681,27 @@ namespace DSZahirDesktop
                         break;
                 }
                 iSim.Keyboard.TextEntry($@"{appfolder}\{excelname}.csv");
+                errStep +=1;
                 Thread.Sleep(2000);
 
-                iSim.Keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.TAB);
-                Thread.Sleep(2000);
-                iSim.Keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.TAB);
-                Thread.Sleep(2000);
-                /* Press 'Save' button by pressing Enter Key */
-                iSim.Keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.RETURN);
+                //iSim.Keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.TAB);
+                //Thread.Sleep(2000);
+                //iSim.Keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.TAB);
+                //Thread.Sleep(2000);
+                /* Press 'Save' button by pressing Enter Key to save repot */
+                //iSim.Keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.RETURN);
+                //Thread.Sleep(2000);
+
+                isFound = findimage("Export-4.savebutton", out pnt);
+                if (isFound)
+                {
+                    SimulateMouseClick(pnt, leftClick.sngl);
+                }
+                else
+                {
+                    return false;
+                }
+                errStep +=1;
                 Thread.Sleep(2000);
 
                 //* Pause the app to wait file saving is finished *//
@@ -673,25 +723,22 @@ namespace DSZahirDesktop
                 }
                 return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                Log.Information("Quitting, end of OpenReport automation function !!");
-                errStep = 0;
+                Log.Information("Quitting.. End of OpenReport automation function !!");
                 return false;
             }
         }
 
         static bool ClosingReport(out int errStep)
         {
-            errStep = 0;
-            var x = new InputSimulator();
+            errStep = 1;
             Point pnt = new Point(0, 0);
             bool isFound = false;
 
             try
             {
-                isFound = findimage("15a.closereport", out pnt);
-                errStep = +1;
+                isFound = findimage("2-9.closereport", out pnt);
                 if (isFound)
                 {
                     SimulateMouseClick(pnt, leftClick.sngl);
@@ -706,7 +753,7 @@ namespace DSZahirDesktop
             }
             catch (Exception)
             {
-                Log.Information("Quitting, end of ClosingReport automation function !!");
+                Log.Information("Quitting.. End of ClosingReport automation function !!");
                 return false;
             }
         }
@@ -714,11 +761,11 @@ namespace DSZahirDesktop
         static bool CloseApp(out int errStep)
         {
             Point pnt = new Point(0, 0);
-            errStep = 0;
+            errStep = 1;
             bool isFound = false;
             try
             {
-                isFound = findimage("16a.settingicon", out pnt);
+                isFound = findimage("9-1.settingicon", out pnt);
                 if (isFound)
                 {
                     SimulateMouseClick(pnt, leftClick.sngl);
@@ -730,7 +777,7 @@ namespace DSZahirDesktop
                 errStep += 1;
                 Thread.Sleep(2500);
 
-                isFound = findimage("17a.exitbutton", out pnt);
+                isFound = findimage("9-2.exitbutton", out pnt);
                 if (isFound)
                 {
                     SimulateMouseClick(pnt, leftClick.sngl);
@@ -742,7 +789,7 @@ namespace DSZahirDesktop
                 errStep += 1;
                 Thread.Sleep(2500);
 
-                isFound = findimage("18a.exitwithoutbackup", out pnt);
+                isFound = findimage("9-3.exitwithoutbackup", out pnt);
                 if (isFound)
                 {
                     SimulateMouseClick(pnt, leftClick.sngl);
@@ -751,7 +798,6 @@ namespace DSZahirDesktop
                 {
                     return false;
                 }
-                errStep += 1;
 
                 /* Wait zahir database screen to close */
                 Thread.Sleep(15000);
@@ -759,7 +805,7 @@ namespace DSZahirDesktop
             }
             catch
             {
-                Log.Information("Quitting, end of AR automation function !!");
+                Log.Information("Quitting.. End of ClosingApp automation function !!");
                 return false;
             }
         }
