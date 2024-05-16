@@ -18,7 +18,11 @@
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
     <PackageReference Include="System.Management" Version="8.0.0" />
-	<None Update="ScreenPicSearch\**"  CopyToOutputDirectory="PreserveNewest"  />
+	<None Update="ScreenPicSearch\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="ScreenPicSearch-ID\" />
   </ItemGroup>
 
 </Project>

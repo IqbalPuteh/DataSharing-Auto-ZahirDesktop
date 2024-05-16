@@ -28,6 +28,7 @@ namespace DSZahirDesktop
         static string sharingfolder = appfolder + @"\" + ConfigurationManager.AppSettings["sharingfolder"];
         static string datapicturefolder = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + @"\" + ConfigurationManager.AppSettings["datapicturefolder"];
         static string screenshotlogfolder = appfolder + @"\" + ConfigurationManager.AppSettings["screenshotlogfolder"];
+        static string windowLang = ConfigurationManager.AppSettings["windowlanguage"].ToUpper();
         static clsSearch MySearch = null;
         static InputSimulator iSim = new InputSimulator();
         enum leftClick
@@ -43,6 +44,9 @@ namespace DSZahirDesktop
         [DllImport("user32.dll")]
 
         private static extern bool BlockInput(bool fBlockIt);
+
+        [DllImport("user32.dll")]
+        private static extern bool SetCursorPos(int X, int Y);
 
         private static bool findimage(string imagename, out Point pnt)
         {
@@ -99,6 +103,12 @@ namespace DSZahirDesktop
             MyDirectoryManipulator myFileUtil = new MyDirectoryManipulator();
             try
             {
+                /* Config reading for 'Indonesia language' */
+                string zahirLang = issandbox = ConfigurationManager.AppSettings["zahirlanguage"].ToUpper();
+                if (zahirLang == "IND")
+                {
+                    datapicturefolder = datapicturefolder + "-ID";
+                }                
                 int resX = 0;
                 int resY = 0;
                 ManagementObjectSearcher mydisplayResolution = new ManagementObjectSearcher("SELECT CurrentHorizontalResolution, CurrentVerticalResolution FROM Win32_VideoController");
@@ -109,7 +119,6 @@ namespace DSZahirDesktop
                 }
                 MySearch = new clsSearch(resX, resY);
 
-                //* Call this method to disable keyboard input
                 int maxWidth = Console.LargestWindowWidth;
                 Console.Title = "Zahir Desktop Version 13 - Automasi - By PT FAIRBANC TECHNOLOGIEST INDONESIA";
                 Console.WindowLeft = 0;
@@ -126,6 +135,8 @@ namespace DSZahirDesktop
                 Console.WriteLine($" Aktifitas penggunakan komputer akan ter-BLOKIR sekitar 10 menit. ");
                 Console.WriteLine($"******************************************************************");
                 Console.WriteLine($"      Resolusi layar adalah lebar: {resX.ToString("0000")}, dan tinggi: {resY.ToString("0000")}         ");
+
+                //* Call this method to disable keyboard input
 
 #if DEBUG
                 BlockInput(false);
@@ -183,7 +194,7 @@ namespace DSZahirDesktop
                     Log.Information($"Application automation failed when running app (OpenDB) on step: {errStep.ToString()} !!!");
                     return;
                 }
-                
+
                 if (!OpenReport(out errStep, "sales"))
                 {
                     Console.Beep();
@@ -286,6 +297,7 @@ namespace DSZahirDesktop
                 }
                 Thread.Sleep(Convert.ToInt32(waitappload));
                 Log.Information("Done waiting app to opened.");
+                SetCursorPos(10, 10);
 
                 return true;
             }
@@ -405,7 +417,7 @@ namespace DSZahirDesktop
                     {
                         return false;
                     }
-                    Thread.Sleep(2000);
+                    Thread.Sleep(5000);
                     errStep +=1;
 
                     isFound = findimage("Sales-1.salesreport", out pnt);
@@ -691,8 +703,16 @@ namespace DSZahirDesktop
                 /* Press 'Save' button by pressing Enter Key to save repot */
                 //iSim.Keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.RETURN);
                 //Thread.Sleep(2000);
+                if (windowLang == "IND")
+                {
+                    isFound = findimage("Export-4.savebutton-ID", out pnt);
+                }
+                else
+                {
+                    isFound = findimage("Export-4.savebutton", out pnt);
+                }
 
-                isFound = findimage("Export-4.savebutton", out pnt);
+                
                 if (isFound)
                 {
                     SimulateMouseClick(pnt, leftClick.sngl);
@@ -787,7 +807,7 @@ namespace DSZahirDesktop
                     return false;
                 }
                 errStep += 1;
-                Thread.Sleep(2500);
+                Thread.Sleep(5000);
 
                 isFound = findimage("9-3.exitwithoutbackup", out pnt);
                 if (isFound)
@@ -798,6 +818,8 @@ namespace DSZahirDesktop
                 {
                     return false;
                 }
+
+
 
                 /* Wait zahir database screen to close */
                 Thread.Sleep(15000);
