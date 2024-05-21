@@ -325,7 +325,7 @@ namespace DSZahirDesktop
                     return false;
                 }
                 errStep += 1;
-                Thread.Sleep(2000);
+                Thread.Sleep(10000);
 
                 isFound = findimage("1-2.localdatabase", out pnt);
                 if (isFound)
@@ -337,7 +337,7 @@ namespace DSZahirDesktop
                     return false;
                 }
                 errStep += 1;
-                Thread.Sleep(2000);
+                Thread.Sleep(5000);
 
 
                 isFound = findimage("1-3.databasename", out pnt);
