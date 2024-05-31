@@ -12,23 +12,23 @@ namespace DSZahirDesktop
 {
     internal class Program
     {
-        static string dtID = ConfigurationManager.AppSettings["dtID"];
-        static string dtName = ConfigurationManager.AppSettings["dtName"];
-        static string dbpath = ConfigurationManager.AppSettings["dbpath"];
-        static string loginId = ConfigurationManager.AppSettings["loginId"];
-        static string password = ConfigurationManager.AppSettings["password"];
-        static string dbname = ConfigurationManager.AppSettings["dbname"];
-        static string runasadmin = ConfigurationManager.AppSettings["runasadmin"].ToUpper();
-        static string waitappload = ConfigurationManager.AppSettings["waitappload"];
-        static string erpappnamepath = ConfigurationManager.AppSettings["erpappnamepath"];
-        static string issandbox = ConfigurationManager.AppSettings["uploadtosandbox"].ToUpper();
-        static string enableconsolelog = ConfigurationManager.AppSettings["enableconsolelog"].ToUpper();
-        static string appfolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\Downloads\" + ConfigurationManager.AppSettings["appfolder"];
-        static string uploadfolder = appfolder + @"\" + ConfigurationManager.AppSettings["uploadfolder"];
-        static string sharingfolder = appfolder + @"\" + ConfigurationManager.AppSettings["sharingfolder"];
-        static string datapicturefolder = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + @"\" + ConfigurationManager.AppSettings["datapicturefolder"];
-        static string screenshotlogfolder = appfolder + @"\" + ConfigurationManager.AppSettings["screenshotlogfolder"];
-        static string windowLang = ConfigurationManager.AppSettings["windowlanguage"].ToUpper();
+        static string dtID = "";
+        static string dtName = "";
+        static string dbpath = "";
+        static string loginId = "";
+        static string password = "";
+        static string dbname = "";
+        static string runasadmin = "";
+        static string waitappload = "";
+        static string erpappnamepath = "";
+        static string issandbox = "";
+        static string enableconsolelog = "";
+        static string appfolder = "";
+        static string uploadfolder = "";
+        static string sharingfolder = "";
+        static string datapicturefolder = "";
+        static string screenshotlogfolder = "";
+        static string windowLang = "";
         static clsSearch MySearch = null;
         static InputSimulator iSim = new InputSimulator();
         enum leftClick
@@ -45,8 +45,7 @@ namespace DSZahirDesktop
 
         private static extern bool BlockInput(bool fBlockIt);
 
-        [DllImport("user32.dll")]
-        private static extern bool SetCursorPos(int X, int Y);
+
 
         private static bool findimage(string imagename, out Point pnt)
         {
@@ -103,12 +102,39 @@ namespace DSZahirDesktop
             MyDirectoryManipulator myFileUtil = new MyDirectoryManipulator();
             try
             {
+
+                 dtID = ConfigurationManager.AppSettings["dtID"];
+                 dtName = ConfigurationManager.AppSettings["dtName"];
+                 dbpath = ConfigurationManager.AppSettings["dbpath"];
+                 loginId = ConfigurationManager.AppSettings["loginId"];
+                 password = ConfigurationManager.AppSettings["password"];
+                 dbname = ConfigurationManager.AppSettings["dbname"];
+                 runasadmin = ConfigurationManager.AppSettings["runasadmin"].ToUpper();
+                 waitappload = ConfigurationManager.AppSettings["waitappload"];
+                 erpappnamepath = ConfigurationManager.AppSettings["erpappnamepath"];
+                 issandbox = ConfigurationManager.AppSettings["uploadtosandbox"].ToUpper();
+                 enableconsolelog = ConfigurationManager.AppSettings["enableconsolelog"].ToUpper();
+                 appfolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\Downloads\" + ConfigurationManager.AppSettings["appfolder"];
+                 uploadfolder = appfolder + @"\" + ConfigurationManager.AppSettings["uploadfolder"];
+                 sharingfolder = appfolder + @"\" + ConfigurationManager.AppSettings["sharingfolder"];
+                 datapicturefolder = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + @"\" + ConfigurationManager.AppSettings["datapicturefolder"];
+                 screenshotlogfolder = appfolder + @"\" + ConfigurationManager.AppSettings["screenshotlogfolder"];
+                 windowLang = ConfigurationManager.AppSettings["windowlanguage"].ToUpper();
+
+
+                if (!Directory.Exists(appfolder))
+                {
+                    myFileUtil.CreateDirectory(appfolder);
+                    myFileUtil.CreateDirectory(uploadfolder);
+                    myFileUtil.CreateDirectory(sharingfolder);
+                    myFileUtil.CreateDirectory(datapicturefolder);
+                }
                 /* Config reading for 'Indonesia language' */
-                string zahirLang = issandbox = ConfigurationManager.AppSettings["zahirlanguage"].ToUpper();
+                string zahirLang = ConfigurationManager.AppSettings["zahirlanguage"].ToUpper();
                 if (zahirLang == "IND")
                 {
                     datapicturefolder = datapicturefolder + "-ID";
-                }                
+                }
                 int resX = 0;
                 int resY = 0;
                 ManagementObjectSearcher mydisplayResolution = new ManagementObjectSearcher("SELECT CurrentHorizontalResolution, CurrentVerticalResolution FROM Win32_VideoController");
@@ -135,22 +161,6 @@ namespace DSZahirDesktop
                 Console.WriteLine($" Aktifitas penggunakan komputer akan ter-BLOKIR sekitar 10 menit. ");
                 Console.WriteLine($"******************************************************************");
                 Console.WriteLine($"      Resolusi layar adalah lebar: {resX.ToString("0000")}, dan tinggi: {resY.ToString("0000")}         ");
-
-                //* Call this method to disable keyboard input
-
-#if DEBUG
-                BlockInput(false);
-#else
-                BlockInput(true);
-#endif
-
-                if (!Directory.Exists(appfolder))
-                {
-                    myFileUtil.CreateDirectory(appfolder);
-                    myFileUtil.CreateDirectory(uploadfolder);
-                    myFileUtil.CreateDirectory(sharingfolder);
-                    myFileUtil.CreateDirectory(datapicturefolder);
-                }
                 Console.ForegroundColor = ConsoleColor.DarkGreen;
                 Console.BackgroundColor = ConsoleColor.Black;
                 var temp0 = myFileUtil.DeleteFiles(appfolder, MyDirectoryManipulator.FileExtension.Csv);
@@ -297,7 +307,7 @@ namespace DSZahirDesktop
                 }
                 Thread.Sleep(Convert.ToInt32(waitappload));
                 Log.Information("Done waiting app to opened.");
-                SetCursorPos(10, 10);
+                //SetCursorPos(10, 10);
 
                 return true;
             }
@@ -865,7 +875,7 @@ namespace DSZahirDesktop
                 // Send the ZIP file to the API server 
                 Log.Information("Sending ZIP file to the API server...");
                 var strStatusCode = "0"; // variable for debugging cUrl test
-                using (cUrlClass myCurlCls = new cUrlClass('Y', issandbox.ToArray().First(), "", sharingfolder + Path.DirectorySeparatorChar + strZipFile))
+                using (cUrlClass myCurlCls = new cUrlClass('Y' , issandbox.ToArray().First(), "", sharingfolder + Path.DirectorySeparatorChar + strZipFile))
                 {
                     strStatusCode = myCurlCls.SendRequest();
                     if (strStatusCode == "200")
