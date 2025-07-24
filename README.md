@@ -35,4 +35,3 @@ dotnet build
 dotnet run --project src/ZahirAutomation.csproj
 
 
-Want help visualizing the automation flow as a diagram or integrating retry logic and error reporting next? I’ve got ideas!
